@@ -3,8 +3,17 @@ package com.parkit.parkingsystem.service;
 import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.Ticket;
 
+import static com.parkit.parkingsystem.constants.Fare.FREE_TIME;
+
+/**
+ * module used to calculate the fare associated to a ticket
+ */
 public class FareCalculatorService {
 
+    /**
+     * Calculate the fare of the ticket given in parameter taking into account the free 30-minute parking
+     * @param ticket The ticket of the exiting vehicle to be completed with the fare
+     */
     public void calculateFare(Ticket ticket){
         if( (ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime())) ){
             throw new IllegalArgumentException(
@@ -17,6 +26,9 @@ public class FareCalculatorService {
         double outLongTime = ticket.getOutTime().getTime();
 
         double duration = (outLongTime - inLongTime)/(60*60*1000.0);
+
+        //implement Free 30-min parking
+        if ( duration <= FREE_TIME ) duration = 0.0;
 
         switch (ticket.getParkingSpot().getParkingType()){
             case CAR: {

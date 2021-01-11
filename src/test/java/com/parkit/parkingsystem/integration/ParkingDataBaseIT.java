@@ -5,6 +5,7 @@ import com.parkit.parkingsystem.dao.ParkingSpotDAO;
 import com.parkit.parkingsystem.dao.TicketDAO;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
 import com.parkit.parkingsystem.integration.service.DataBasePrepareService;
+import com.parkit.parkingsystem.model.ParkingSpot;
 import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.ParkingService;
 import com.parkit.parkingsystem.util.InputReaderUtil;
@@ -16,6 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Date;
+
+import static com.parkit.parkingsystem.constants.Fare.FREE_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.mockito.Mockito.when;
@@ -65,23 +69,38 @@ public class ParkingDataBaseIT {
         int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
         assertThat(ticket).isNotNull();
         assertThat(result).isGreaterThan(1);
+        assertThat(ticket.getPrice()).isEqualTo(0.0);
     }
 
     @Test
     public void testParkingLotExit() {
         //GIVEN
-        testParkingACar();
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+        ParkingSpot parkingSpot = parkingService.getNextParkingNumberIfAvailable();
+        parkingSpot.setAvailable(false);
+        parkingSpotDAO.updateParking(parkingSpot);
+        Ticket ticket = new Ticket();
+        ticket.setId(1);
+        ticket.setParkingSpot(parkingSpot) ;
+        ticket.setVehicleRegNumber("ABCDEF");
+        ticket.setPrice(0.0);
+        //duration = free-time + 5mn
+        int duration = (int) (FREE_TIME*60*60*1000+300000) ;
+        System.out.println(duration);
+        ticket.setInTime(new Date(System.currentTimeMillis() - (duration)));
+        ticketDAO.saveTicket(ticket);
+
 
         //WHEN
         parkingService.processExitingVehicle();
 
         //THEN
-        Ticket ticket = ticketDAO.getTicket("ABCDEF");
+        ticket = ticketDAO.getTicket("ABCDEF");
         int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
+
+        assertThat(result).isEqualTo(1);
         assertThat(ticket.getPrice()).isGreaterThan(0.0);
         assertThat(ticket.getOutTime()).isNotNull();
-        assertThat(result).isEqualTo(1);
     }
 
 }
