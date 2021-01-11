@@ -13,8 +13,8 @@ public class FareCalculatorService {
                             "Out time provided is incorrect:" + ticket.getOutTime().toString());
         }
 
-        long inLongTime = ticket.getInTime().getTime();
-        long outLongTime = ticket.getOutTime().getTime();
+        double inLongTime = ticket.getInTime().getTime();
+        double outLongTime = ticket.getOutTime().getTime();
 
         double duration = (outLongTime - inLongTime)/(60*60*1000.0);
 
