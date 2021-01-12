@@ -45,7 +45,7 @@ public class ParkingDataBaseIT {
     }
 
     @BeforeEach
-    private void setUpPerTest() throws Exception {
+    private void setUpPerTest() {
         when(inputReaderUtil.readSelection()).thenReturn(1);
         when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
         dataBasePrepareService.clearDataBaseEntries();
@@ -96,11 +96,13 @@ public class ParkingDataBaseIT {
 
         //THEN
         ticket = ticketDAO.getTicket("ABCDEF");
+        ticket = ticketDAO.checkRecurringUser(ticket);
         int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
 
         assertThat(result).isEqualTo(1);
         assertThat(ticket.getPrice()).isGreaterThan(0.0);
         assertThat(ticket.getOutTime()).isNotNull();
+        assertThat(ticket.getDiscount()).isFalse();
     }
 
 }

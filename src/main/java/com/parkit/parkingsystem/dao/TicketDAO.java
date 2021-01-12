@@ -19,8 +19,14 @@ public class TicketDAO {
 
     public DataBaseConfig dataBaseConfig = new DataBaseConfig();
 
+    /**
+     * Inserts in the datadabase the data of the ticket of an incoming vehicle
+     * @param ticket Th ticket to be inserted in the database
+     * @return true if the database insert was completed successfully, false if not
+     */
     public boolean saveTicket(Ticket ticket){
         Connection con = null;
+        boolean saveDone = false;
         try {
             con = dataBaseConfig.getConnection();
             PreparedStatement ps = con.prepareStatement(DBConstants.SAVE_TICKET);
@@ -31,15 +37,20 @@ public class TicketDAO {
             ps.setDouble(3, ticket.getPrice());
             ps.setTimestamp(4, new Timestamp(ticket.getInTime().getTime()));
             ps.setTimestamp(5, (ticket.getOutTime() == null)?null: (new Timestamp(ticket.getOutTime().getTime())) );
-            return ps.execute();
+            saveDone =  ps.execute();
         }catch (Exception ex){
-            logger.error("Error fetching next available slot",ex);
+            logger.error("Error saving ticket",ex);
         }finally {
             dataBaseConfig.closeConnection(con);
-            return false;
         }
+        return saveDone;
     }
 
+    /**
+     * Reads th database to retrieve the ticket of a vehicle which is inside the parking lot
+     * @param vehicleRegNumber The registration number of the vehicle entered in the parking lot and still inside
+     * @return the corresponding ticket
+     */
     public Ticket getTicket(String vehicleRegNumber) {
         Connection con = null;
         Ticket ticket = null;
@@ -61,16 +72,48 @@ public class TicketDAO {
             }
             dataBaseConfig.closeResultSet(rs);
             dataBaseConfig.closePreparedStatement(ps);
+
         }catch (Exception ex){
-            logger.error("Error fetching next available slot",ex);
+            logger.error("Error updating saved ticket with discount",ex);
         }finally {
             dataBaseConfig.closeConnection(con);
-            return ticket;
         }
+        return ticket;
     }
 
+    /**
+     * Update the ticket : set discount to true if it exists more than one ticket for the same vehicle,
+     * else set it to false.
+     * @param ticket The ticket which need a set of the attribute discount
+     * @return The input ticket with the value of the attribute "discount" set
+     */
+    public Ticket checkRecurringUser(Ticket ticket) {
+        Connection con = null;
+        try {
+            con = dataBaseConfig.getConnection();
+            PreparedStatement ps = con.prepareStatement(DBConstants.CHECK_RECURRING_USER);
+            //COUNT(*)
+            ps.setString(1,ticket.getVehicleRegNumber());
+            ResultSet rs = ps.executeQuery();
+            ticket.setDiscount(rs.next() && rs.getInt(1) > 1);
+            dataBaseConfig.closeResultSet(rs);
+            dataBaseConfig.closePreparedStatement(ps);
+        }catch (Exception ex){
+            logger.error("Error while setting the attribute discount of the saved ticket",ex);
+        }finally {
+            dataBaseConfig.closeConnection(con);
+        }
+        return ticket;
+    }
+
+    /**
+     * Updates the registered ticket in the database with the ticket price and the out time
+     * @param ticket The ticket to be updated in the database
+     * @return true if the database update was completed successfully, false if not
+     */
     public boolean updateTicket(Ticket ticket) {
         Connection con = null;
+        boolean updateDone = false;
         try {
             con = dataBaseConfig.getConnection();
             PreparedStatement ps = con.prepareStatement(DBConstants.UPDATE_TICKET);
@@ -78,12 +121,12 @@ public class TicketDAO {
             ps.setTimestamp(2, new Timestamp(ticket.getOutTime().getTime()));
             ps.setInt(3,ticket.getId());
             ps.execute();
-            return true;
+            updateDone = true;
         }catch (Exception ex){
-            logger.error("Error saving ticket info",ex);
+            logger.error("Error updating ticket info",ex);
         }finally {
             dataBaseConfig.closeConnection(con);
         }
-        return false;
+        return updateDone;
     }
 }
