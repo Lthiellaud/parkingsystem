@@ -34,6 +34,7 @@ public class ParkingService {
      * handles with parking lot entrances.
      * checks if there are available parking lot, and if it's ok, allocate a specific parking place to the user
      * and mark it as occupied
+     * Also checks if this a recurrent user to tell him if he will benefit from a 5% discount"
      */
     public void processIncomingVehicle() {
         try{
@@ -67,7 +68,7 @@ public class ParkingService {
     }
 
     /**
-     *
+     * Asks the user the registration number of his vehicle
      * @return the vehicle registration number the user has typed on the shell
      *
      */
@@ -76,11 +77,16 @@ public class ParkingService {
         return inputReaderUtil.readVehicleRegistrationNumber();
     }
 
+    /**
+     * Checks and gives the next available parking spot.
+     * Asks the user the the parking type needed, checks and gives the next corresponding available parking spot
+     * @return the next available parking spot for the asked vehicle type
+     */
     public ParkingSpot getNextParkingNumberIfAvailable(){
         int parkingNumber ;
         ParkingSpot parkingSpot = null;
         try{
-            ParkingType parkingType = getVehichleType();
+            ParkingType parkingType = getVehicleType();
             parkingNumber = parkingSpotDAO.getNextAvailableSlot(parkingType);
             if ( parkingNumber > 0 ) {
                 parkingSpot = new ParkingSpot(parkingNumber,parkingType, true);
@@ -95,7 +101,11 @@ public class ParkingService {
         return parkingSpot;
     }
 
-    private ParkingType getVehichleType(){
+    /**
+     * Asks the user the parking type needed.
+     * @return the parking type needed following the answer given by the user on the shell
+     */
+    private ParkingType getVehicleType(){
         System.out.println("Please select vehicle type from menu");
         System.out.println("1 CAR");
         System.out.println("2 BIKE");
@@ -114,6 +124,10 @@ public class ParkingService {
         }
     }
 
+    /**
+     * handles with parking lot exits.
+     * Calculates the fare and ask the user the amount to be payed     *
+     */
     public void processExitingVehicle() {
         try{
             String vehicleRegNumber = getVehicleRegNumber();

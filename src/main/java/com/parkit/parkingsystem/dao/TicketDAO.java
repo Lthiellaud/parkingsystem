@@ -19,6 +19,11 @@ public class TicketDAO {
 
     public DataBaseConfig dataBaseConfig = new DataBaseConfig();
 
+    /**
+     * Inserts in the datadabase the data of the ticket of an incoming vehicle
+     * @param ticket Th ticket to be inserted in the database
+     * @return true if the database insert was completed successfully, false if not
+     */
     public boolean saveTicket(Ticket ticket){
         Connection con = null;
         boolean saveDone = false;
@@ -41,6 +46,11 @@ public class TicketDAO {
         return saveDone;
     }
 
+    /**
+     * Reads th database to retrieve the ticket of a vehicle which is inside the parking lot
+     * @param vehicleRegNumber The registration number of the vehicle entered in the parking lot and still inside
+     * @return the corresponding ticket
+     */
     public Ticket getTicket(String vehicleRegNumber) {
         Connection con = null;
         Ticket ticket = null;
@@ -71,6 +81,12 @@ public class TicketDAO {
         return ticket;
     }
 
+    /**
+     * Update the ticket : set discount to true if it exists more than one ticket for the same vehicle,
+     * else set it to false.
+     * @param ticket The ticket which need a set of the attribute discount
+     * @return The input ticket with the value of the attribute "discount" set
+     */
     public Ticket checkRecurringUser(Ticket ticket) {
         Connection con = null;
         try {
@@ -83,13 +99,18 @@ public class TicketDAO {
             dataBaseConfig.closeResultSet(rs);
             dataBaseConfig.closePreparedStatement(ps);
         }catch (Exception ex){
-            logger.error("Error fetching saved ticket",ex);
+            logger.error("Error while setting the attribute discount of the saved ticket",ex);
         }finally {
             dataBaseConfig.closeConnection(con);
         }
         return ticket;
     }
 
+    /**
+     * Updates the registered ticket in the database with the ticket price and the out time
+     * @param ticket The ticket to be updated in the database
+     * @return true if the database update was completed successfully, false if not
+     */
     public boolean updateTicket(Ticket ticket) {
         Connection con = null;
         boolean updateDone = false;
