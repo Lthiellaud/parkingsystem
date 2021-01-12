@@ -4,6 +4,7 @@ import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.Ticket;
 
 import static com.parkit.parkingsystem.constants.Fare.FREE_TIME;
+import static com.parkit.parkingsystem.constants.Fare.REGULAR_USER_DISCOUNT_RATE;
 
 /**
  * module used to calculate the fare associated to a ticket
@@ -29,6 +30,9 @@ public class FareCalculatorService {
 
         //implement Free 30-min parking
         if ( duration <= FREE_TIME ) duration = 0.0;
+
+        //implement 5%-discount for recurring
+        if (ticket.getDiscount()) duration *= (1 - REGULAR_USER_DISCOUNT_RATE);
 
         switch (ticket.getParkingSpot().getParkingType()){
             case CAR: {

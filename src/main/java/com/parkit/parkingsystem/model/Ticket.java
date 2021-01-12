@@ -1,8 +1,12 @@
 package com.parkit.parkingsystem.model;
 
-import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * This class describes a parking ticket.
+ * It is made up of an id, a parking spot, a vehicle registration number, the associated price,
+ * the in time, the out time and a discount indicator
+ */
 public class Ticket {
     private int id;
     private ParkingSpot parkingSpot;
@@ -10,6 +14,17 @@ public class Ticket {
     private double price;
     private Date inTime;
     private Date outTime;
+    private Boolean discount;
+
+
+    public Boolean getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(Boolean discount) {
+        this.discount = discount;
+    }
+
 
     public int getId() {
         return id;
