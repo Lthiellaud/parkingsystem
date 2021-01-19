@@ -4,8 +4,8 @@ import java.util.Date;
 
 /**
  * This class describes a parking ticket.
- * It is made up of an id, a parking spot, a vehicle registration number, the associated price,
- * the in time, the out time and a discount indicator
+ * It is made up of an id, a parking spot, a vehicle registration number,
+ * the associated price, the in time, the out time and a discount indicator
  */
 public class Ticket {
     private int id;
@@ -14,14 +14,14 @@ public class Ticket {
     private double price;
     private Date inTime;
     private Date outTime;
-    private Boolean discount;
+    private boolean discount;
 
 
-    public Boolean getDiscount() {
+    public boolean getDiscount() {
         return discount;
     }
 
-    public void setDiscount(Boolean discount) {
+    public void setDiscount(boolean discount) {
         this.discount = discount;
     }
 

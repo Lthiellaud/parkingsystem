@@ -2,12 +2,20 @@ package com.parkit.parkingsystem.model;
 
 import com.parkit.parkingsystem.constants.ParkingType;
 
+/**
+ * Definition of a parking spot.
+ * It has 3 attributes :
+ * number is the identifier oh the spot
+ * parkingType define the vehicle type for which it is adapted
+ * isAvailable precise if it is available or not
+ */
 public class ParkingSpot {
     private int number;
     private ParkingType parkingType;
     private boolean isAvailable;
 
-    public ParkingSpot(int number, ParkingType parkingType, boolean isAvailable) {
+    public ParkingSpot(int number,
+                       final ParkingType parkingType, boolean isAvailable) {
         this.number = number;
         this.parkingType = parkingType;
         this.isAvailable = isAvailable;
@@ -39,8 +47,12 @@ public class ParkingSpot {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ParkingSpot that = (ParkingSpot) o;
         return number == that.number;
     }

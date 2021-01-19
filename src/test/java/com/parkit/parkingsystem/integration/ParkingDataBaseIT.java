@@ -5,6 +5,7 @@ import com.parkit.parkingsystem.dao.ParkingSpotDAO;
 import com.parkit.parkingsystem.dao.TicketDAO;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
 import com.parkit.parkingsystem.integration.service.DataBasePrepareService;
+import com.parkit.parkingsystem.integration.service.DataBaseRequestService;
 import com.parkit.parkingsystem.model.ParkingSpot;
 import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.ParkingService;
@@ -31,6 +32,8 @@ public class ParkingDataBaseIT {
     private static ParkingSpotDAO parkingSpotDAO;
     private static TicketDAO ticketDAO;
     private static DataBasePrepareService dataBasePrepareService;
+    private static DataBaseRequestService dataBaseRequestService;
+    private static Date refDate;
 
     @Mock
     private static InputReaderUtil inputReaderUtil;
@@ -42,6 +45,7 @@ public class ParkingDataBaseIT {
         ticketDAO = new TicketDAO();
         ticketDAO.dataBaseConfig = dataBaseTestConfig;
         dataBasePrepareService = new DataBasePrepareService();
+        dataBaseRequestService = new DataBaseRequestService();
     }
 
     @BeforeEach
@@ -49,11 +53,7 @@ public class ParkingDataBaseIT {
         when(inputReaderUtil.readSelection()).thenReturn(1);
         when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
         dataBasePrepareService.clearDataBaseEntries();
-    }
-
-    @AfterAll
-    private static void tearDown(){
-
+        refDate = new Date (System.currentTimeMillis() - 1000);
     }
 
     @Test
@@ -70,6 +70,10 @@ public class ParkingDataBaseIT {
         assertThat(ticket).isNotNull();
         assertThat(result).isGreaterThan(1);
         assertThat(ticket.getPrice()).isEqualTo(0.0);
+        assertThat(ticket.getInTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
+                true, true);
+        assertThat(ticket.getOutTime()).isNull();
+        assertThat(ticketDAO.checkRecurringUser(ticket)).isFalse();
     }
 
     @Test
@@ -79,30 +83,23 @@ public class ParkingDataBaseIT {
         ParkingSpot parkingSpot = parkingService.getNextParkingNumberIfAvailable();
         parkingSpot.setAvailable(false);
         parkingSpotDAO.updateParking(parkingSpot);
-        Ticket ticket = new Ticket();
-        ticket.setId(1);
-        ticket.setParkingSpot(parkingSpot) ;
-        ticket.setVehicleRegNumber("ABCDEF");
-        ticket.setPrice(0.0);
-        //duration = free-time + 5mn
-        int duration = (int) (FREE_TIME*60*60*1000+300000) ;
-        System.out.println(duration);
-        ticket.setInTime(new Date(System.currentTimeMillis() - (duration)));
-        ticketDAO.saveTicket(ticket);
-
+        dataBaseRequestService.createTickets(true, "ABCDEF");
+        dataBaseRequestService.createTickets(false, "ABCDEF");
 
         //WHEN
         parkingService.processExitingVehicle();
+        Ticket ticket = dataBaseRequestService.getLastTicket("ABCDEF");
+        ticket.setDiscount(ticketDAO.checkRecurringUser(ticket));
+        int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
 
         //THEN
-        ticket = ticketDAO.getTicket("ABCDEF");
-        ticket = ticketDAO.checkRecurringUser(ticket);
-        int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
 
         assertThat(result).isEqualTo(1);
         assertThat(ticket.getPrice()).isGreaterThan(0.0);
-        assertThat(ticket.getOutTime()).isNotNull();
-        assertThat(ticket.getDiscount()).isFalse();
+        assertThat(ticket.getOutTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
+                true,true);
+        assertThat(ticket.getInTime()).isBefore(ticket.getOutTime());
+        assertThat(ticket.getDiscount()).isTrue();
     }
 
 }
