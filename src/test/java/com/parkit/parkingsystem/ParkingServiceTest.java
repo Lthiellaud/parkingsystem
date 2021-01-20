@@ -201,7 +201,7 @@ public class ParkingServiceTest {
 
         //THEN
         assertThat(outputStreamCaptor.toString()).doesNotContain("Generated Ticket and saved in DB");
-        assertThat(outputStreamCaptor.toString()).contains("Parking slots might be full");
+        assertThat(outputStreamCaptor.toString()).contains("You cannot enter. Parking slots are full");
     }
 
     @Test

@@ -5,15 +5,21 @@ import com.parkit.parkingsystem.constants.ParkingType;
 /**
  * Definition of a parking spot.
  * It has 3 attributes :
- * number is the identifier oh the spot
- * parkingType define the vehicle type for which it is adapted
- * isAvailable precise if it is available or not
+ * number is the identifier of the spot
+ * parkingType defines the vehicle type for which it is adapted
+ * isAvailable precises if it is available or not
  */
 public class ParkingSpot {
     private int number;
     private ParkingType parkingType;
     private boolean isAvailable;
 
+    /**
+     * Constructor of ParkingSpot.
+     * @param number identifier of the spot
+     * @param parkingType defines the vehicle type for which it is adapted
+     * @param isAvailable precises if it is available or not
+     */
     public ParkingSpot(int number,
                        final ParkingType parkingType, boolean isAvailable) {
         this.number = number;

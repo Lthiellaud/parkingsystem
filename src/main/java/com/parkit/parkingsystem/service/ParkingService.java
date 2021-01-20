@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
 
+import static com.parkit.parkingsystem.constants.Fare.FREE_TIME;
+
 /**
  * handles all actions related to parking lot entrances and exits. *
  */
@@ -104,8 +106,7 @@ public class ParkingService {
             if (parkingNumber > 0) {
                 parkingSpot = new ParkingSpot(parkingNumber, parkingType, true);
             } else {
-                System.out.println("Error fetching parking number "
-                        + "from DB. Parking slots might be full");
+                System.out.println("You cannot enter. Parking slots are full");
                 throw new Exception("Error fetching parking number "
                         + "from DB. Parking slots might be full");
             }
@@ -156,8 +157,13 @@ public class ParkingService {
                     ParkingSpot parkingSpot = ticket.getParkingSpot();
                     parkingSpot.setAvailable(true);
                     parkingSpotDAO.updateParking(parkingSpot);
-                    System.out.println("Please pay the parking fare:"
-                            + ticket.getPrice());
+                    if (ticket.getPrice() == 0) {
+                        System.out.println("You've been parked less than "
+                                + (int) (FREE_TIME * 60) + "mn. Nothing to pay");
+                    } else {
+                        System.out.println("Please pay the parking fare:"
+                                + ticket.getPrice());
+                    }
                     System.out.println("Recorded out-time for vehicle number:"
                             + ticket.getVehicleRegNumber() + " is:" + outTime);
                 } else {

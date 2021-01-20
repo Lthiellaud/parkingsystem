@@ -10,15 +10,30 @@ import org.apache.logging.log4j.Logger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * Class used for retrieving data from table "parking".
  */
 public class ParkingSpotDAO {
+
     private static final Logger LOGGER = LogManager.getLogger("ParkingSpotDAO");
+    private DataBaseConfig dataBaseConfig;
 
-    public DataBaseConfig dataBaseConfig = new DataBaseConfig();
+    /**
+     * Constructor of ParkingSpotDAO with database config as a parameter.
+     * @param dataBaseConfig input parameter
+     */
+    public ParkingSpotDAO(final DataBaseConfig dataBaseConfig) {
+        this.dataBaseConfig = dataBaseConfig;
+    }
 
+    /**
+     * Constructor of ParkingSpotDAO without parameter.
+     */
+    public ParkingSpotDAO() {
+        this.dataBaseConfig = new DataBaseConfig();
+    }
     /**
      * Sends the number of the next available slot found in the parking table
      * for the given vehicle type.
@@ -26,51 +41,37 @@ public class ParkingSpotDAO {
      * @return the number of the next available slot for the given vehicle
      *  type if it exists, (-1) if not.
      */
-    public int getNextAvailableSlot(ParkingType parkingType) {
-        Connection con = null;
+     public int getNextAvailableSlot(ParkingType parkingType) {
         int result = -1;
-        try {
-            con = dataBaseConfig.getConnection();
-            PreparedStatement ps
-                    = con.prepareStatement(DBConstants.GET_NEXT_PARKING_SPOT);
+        try (Connection con = dataBaseConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstants.GET_NEXT_PARKING_SPOT)) {
             ps.setString(1, parkingType.toString());
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                result = rs.getInt(1);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    result = rs.getInt(1);
+                }
             }
-            dataBaseConfig.closeResultSet(rs);
-            dataBaseConfig.closePreparedStatement(ps);
-        } catch (Exception ex) {
-            LOGGER.error(
-                    "Error fetching next available slot in the database", ex);
-        } finally {
-            dataBaseConfig.closeConnection(con);
+        } catch (ClassNotFoundException | SQLException ex) {
+            LOGGER.error("Error fetching next available slot in the database", ex);
         }
         return result;
     }
 
     /**
-     * Updates "parking" table with the data of the given ParkingSpot instance.
+     * Updates available in "parking" table for the given ParkingSpot instance.
      * @param parkingSpot the parking spot to be updated
      * @return true if the updte is Ok, false if not
      */
     public boolean updateParking(ParkingSpot parkingSpot) {
-        //update the availability fo that parking slot
-        Connection con = null;
-        try {
-            con = dataBaseConfig.getConnection();
-            PreparedStatement ps
-                    = con.prepareStatement(DBConstants.UPDATE_PARKING_SPOT);
+        try (Connection con = dataBaseConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstants.UPDATE_PARKING_SPOT)) {
             ps.setBoolean(1, parkingSpot.isAvailable());
             ps.setInt(2, parkingSpot.getId());
             int updateRowCount = ps.executeUpdate();
-            dataBaseConfig.closePreparedStatement(ps);
             return (updateRowCount == 1);
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error updating parking info", ex);
             return false;
-        } finally {
-            dataBaseConfig.closeConnection(con);
         }
     }
 

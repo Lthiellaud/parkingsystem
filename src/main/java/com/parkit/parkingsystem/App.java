@@ -9,7 +9,12 @@ import org.apache.logging.log4j.Logger;
  */
 public class App {
     private static final Logger LOGGER = LogManager.getLogger("App");
-    public static void main (String [] args) {
+
+    /**
+     * Main Class of "Park'it" application.
+     * @param args
+     */
+    public static void main(String[] args) {
         LOGGER.info("Initializing Parking System");
         InteractiveShell.loadInterface();
     }

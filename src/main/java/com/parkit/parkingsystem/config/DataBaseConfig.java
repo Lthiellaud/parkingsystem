@@ -18,7 +18,7 @@ public class DataBaseConfig {
      * @throws ClassNotFoundException
      * @throws SQLException
      */
-    @SuppressWarnings("checkstyle:NoWhitespaceBefore")
+
     public Connection getConnection() throws ClassNotFoundException,
                                              SQLException {
         LOGGER.info("Create DB connection");

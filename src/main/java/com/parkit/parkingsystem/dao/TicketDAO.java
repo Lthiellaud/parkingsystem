@@ -8,10 +8,7 @@ import com.parkit.parkingsystem.model.Ticket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
+import java.sql.*;
 
 /**
  * Class used for retrieving data from table "ticket".
@@ -20,7 +17,22 @@ public class TicketDAO {
 
     private static final Logger LOGGER = LogManager.getLogger("TicketDAO");
 
-    public DataBaseConfig dataBaseConfig = new DataBaseConfig();
+    private DataBaseConfig dataBaseConfig;
+
+    /**
+     * Constructor of ParkingSpotDAO with database config as a parameter.
+     * @param dataBaseConfig input parameter
+     */
+    public TicketDAO(final DataBaseConfig dataBaseConfig) {
+        this.dataBaseConfig = dataBaseConfig;
+    }
+
+    /**
+     * Constructor of ParkingSpotDAO without parameter.
+     */
+    public TicketDAO() {
+        this.dataBaseConfig = new DataBaseConfig();
+    }
 
     /**
      * Inserts in the database the data of the ticket of an incoming vehicle.
@@ -29,12 +41,9 @@ public class TicketDAO {
      *  false if not
      */
     public boolean saveTicket(Ticket ticket) {
-        Connection con = null;
         boolean saveDone = false;
-        try {
-            con = dataBaseConfig.getConnection();
-            PreparedStatement ps
-                    = con.prepareStatement(DBConstants.SAVE_TICKET);
+        try (Connection con = dataBaseConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstants.SAVE_TICKET)) {
             ps.setInt(1, ticket.getParkingSpot().getId());
             ps.setString(2, ticket.getVehicleRegNumber());
             ps.setDouble(3, ticket.getPrice());
@@ -42,10 +51,8 @@ public class TicketDAO {
             ps.setTimestamp(5, (ticket.getOutTime() == null)
                     ? null : (new Timestamp(ticket.getOutTime().getTime())));
             saveDone =  ps.execute();
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error saving ticket", ex);
-        } finally {
-            dataBaseConfig.closeConnection(con);
         }
         return saveDone;
     }
@@ -57,33 +64,27 @@ public class TicketDAO {
      * @return the corresponding ticket
      */
     public Ticket getTicket(String vehicleRegNumber) {
-        Connection con = null;
         Ticket ticket = null;
-        try {
-            con = dataBaseConfig.getConnection();
-            PreparedStatement ps = con.prepareStatement(DBConstants.GET_TICKET);
+        try (Connection con = dataBaseConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstants.GET_TICKET)) {
             //ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
             ps.setString(1, vehicleRegNumber);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ticket = new Ticket();
-                ParkingSpot parkingSpot =
-                    new ParkingSpot(rs.getInt(1),
-                        ParkingType.valueOf(rs.getString(6)), false);
-                ticket.setParkingSpot(parkingSpot);
-                ticket.setId(rs.getInt(2));
-                ticket.setVehicleRegNumber(vehicleRegNumber);
-                ticket.setPrice(rs.getDouble(3));
-                ticket.setInTime(rs.getTimestamp(4));
-                ticket.setOutTime(rs.getTimestamp(5));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    ticket = new Ticket();
+                    ParkingSpot parkingSpot =
+                            new ParkingSpot(rs.getInt(1),
+                                    ParkingType.valueOf(rs.getString(6)), false);
+                    ticket.setParkingSpot(parkingSpot);
+                    ticket.setId(rs.getInt(2));
+                    ticket.setVehicleRegNumber(vehicleRegNumber);
+                    ticket.setPrice(rs.getDouble(3));
+                    ticket.setInTime(rs.getTimestamp(4));
+                    ticket.setOutTime(rs.getTimestamp(5));
+                }
             }
-            dataBaseConfig.closeResultSet(rs);
-            dataBaseConfig.closePreparedStatement(ps);
-
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error updating saved ticket with discount", ex);
-        } finally {
-            dataBaseConfig.closeConnection(con);
         }
         return ticket;
     }
@@ -95,22 +96,16 @@ public class TicketDAO {
      *  false if not
      */
     public boolean checkRecurringUser(Ticket ticket) {
-        Connection con = null;
         boolean recurrent = false;
-        try {
-            con = dataBaseConfig.getConnection();
-            PreparedStatement ps
-                    = con.prepareStatement(DBConstants.CHECK_RECURRING_USER);
+        try (Connection con = dataBaseConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstants.CHECK_RECURRING_USER)) {
             //COUNT(*)
             ps.setString(1, ticket.getVehicleRegNumber());
-            ResultSet rs = ps.executeQuery();
-            recurrent = (rs.next() && rs.getInt(1) > 1);
-            dataBaseConfig.closeResultSet(rs);
-            dataBaseConfig.closePreparedStatement(ps);
-        } catch (Exception ex) {
+            try (ResultSet rs = ps.executeQuery()) {
+                recurrent = (rs.next() && rs.getInt(1) > 1);
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error while retrieving discount information", ex);
-        } finally {
-            dataBaseConfig.closeConnection(con);
         }
         return recurrent;
     }
@@ -123,22 +118,16 @@ public class TicketDAO {
      *  false if not
      */
     public boolean updateTicket(Ticket ticket) {
-        Connection con = null;
         boolean updateDone = false;
-        try {
-            con = dataBaseConfig.getConnection();
-            PreparedStatement ps
-                    = con.prepareStatement(DBConstants.UPDATE_TICKET);
+        try (Connection con = dataBaseConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstants.UPDATE_TICKET)) {
             ps.setDouble(1, ticket.getPrice());
             ps.setTimestamp(2, new Timestamp(ticket.getOutTime().getTime()));
             ps.setInt(3, ticket.getId());
             int updateRowCount = ps.executeUpdate();
             updateDone = (updateRowCount == 1);
-            dataBaseConfig.closePreparedStatement(ps);
-        } catch (Exception ex) {
-            LOGGER.error("Error updating ticket info", ex);
-        } finally {
-            dataBaseConfig.closeConnection(con);
+        } catch (ClassNotFoundException | SQLException ex) {
+            LOGGER.error("Error while updating ticket", ex);
         }
         return updateDone;
     }
