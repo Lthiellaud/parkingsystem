@@ -77,8 +77,6 @@ public class ParkingServiceTest {
             ticket.setParkingSpot(parkingSpot);
             ticket.setVehicleRegNumber("ABCDEF");
 
-            when(ticketDAO.saveTicket(any(Ticket.class))).thenReturn(true);
-
             when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(false);
 
             parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
@@ -126,7 +124,7 @@ public class ParkingServiceTest {
     @Test
     public void processExitingVehicle_getTicketKO_Test(){
         //GIVEN
-        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDE");
         when(ticketDAO.getTicket(anyString())).thenReturn(null);
         parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
 
@@ -200,6 +198,8 @@ public class ParkingServiceTest {
         parkingService.processIncomingVehicle();
 
         //THEN
+        verify(parkingSpotDAO, Mockito.times(0)).updateParking(any(ParkingSpot.class));
+        verify(ticketDAO, Mockito.times(0)).checkRecurringUser(any(Ticket.class));
         assertThat(outputStreamCaptor.toString()).doesNotContain("Generated Ticket and saved in DB");
         assertThat(outputStreamCaptor.toString()).contains("You cannot enter. Parking slots are full");
     }
@@ -214,8 +214,10 @@ public class ParkingServiceTest {
         parkingService.processIncomingVehicle();
 
         //THEN
+        verify(parkingSpotDAO, Mockito.times(0)).updateParking(any(ParkingSpot.class));
+        verify(ticketDAO, Mockito.times(0)).checkRecurringUser(any(Ticket.class));
         assertThat(outputStreamCaptor.toString()).doesNotContain("Generated Ticket and saved in DB");
         assertThat(outputStreamCaptor.toString()).contains("That's not a correct input");
-
     }
+
 }

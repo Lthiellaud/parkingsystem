@@ -12,6 +12,7 @@ import java.sql.*;
 
 /**
  * Class used for retrieving data from table "ticket".
+ * ticket table column : ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME
  */
 public class TicketDAO {
 
@@ -36,12 +37,11 @@ public class TicketDAO {
 
     /**
      * Inserts in the database the data of the ticket of an incoming vehicle.
-     * @param ticket Th ticket to be inserted in the database
-     * @return true if the database insert was completed successfully,
-     *  false if not
+     * @param ticket The ticket to be inserted in the database
+     *
      */
-    public boolean saveTicket(Ticket ticket) {
-        boolean saveDone = false;
+    public void saveTicket(Ticket ticket) {
+        //boolean saveDone = false;
         try (Connection con = dataBaseConfig.getConnection();
              PreparedStatement ps = con.prepareStatement(DBConstants.SAVE_TICKET)) {
             ps.setInt(1, ticket.getParkingSpot().getId());
@@ -50,11 +50,13 @@ public class TicketDAO {
             ps.setTimestamp(4, new Timestamp(ticket.getInTime().getTime()));
             ps.setTimestamp(5, (ticket.getOutTime() == null)
                     ? null : (new Timestamp(ticket.getOutTime().getTime())));
-            saveDone =  ps.execute();
+            //saveDone =
+            ps.execute();
+
         } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error saving ticket", ex);
         }
-        return saveDone;
+        //return saveDone;
     }
 
     /**
@@ -67,7 +69,6 @@ public class TicketDAO {
         Ticket ticket = null;
         try (Connection con = dataBaseConfig.getConnection();
              PreparedStatement ps = con.prepareStatement(DBConstants.GET_TICKET)) {
-            //ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
             ps.setString(1, vehicleRegNumber);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
