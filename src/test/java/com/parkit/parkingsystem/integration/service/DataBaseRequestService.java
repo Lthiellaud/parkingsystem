@@ -1,7 +1,5 @@
 package com.parkit.parkingsystem.integration.service;
 
-import com.mysql.cj.jdbc.CallableStatement;
-import com.parkit.parkingsystem.constants.DBConstants;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
 import com.parkit.parkingsystem.integration.constants.DBConstantsIT;
@@ -12,20 +10,27 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.util.Date;
 
 import static com.parkit.parkingsystem.constants.Fare.FREE_TIME;
+import static com.parkit.parkingsystem.integration.constants.DBConstantsIT.FILL_PARKING_IT;
+import static com.parkit.parkingsystem.integration.constants.DBConstantsIT.OCCUPY_PARKING_IT;
 
 public class DataBaseRequestService {
 
     DataBaseTestConfig dataBaseTestConfig = new DataBaseTestConfig();
 
-    public Ticket getLastTicket(String vehicleRegNumber){
-        Connection con = null;
+    /**
+     * Idem ticketDAO.getTicket() except for the "where" condition.
+     * The exit is done => outTime is not null
+     * @param vehicleRegNumber registration number of the vehicle that has just exited.
+     * @return the registered ticket
+     */
+    public Ticket getExitedVehicleTicket(String vehicleRegNumber){
+
         Ticket ticket = null;
-        try {
-            con = dataBaseTestConfig.getConnection();
-            PreparedStatement ps = con.prepareStatement(DBConstantsIT.GET_LAST_TICKET_IT);
+        try (Connection con = dataBaseTestConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstantsIT.GET_EXITED_VEHICLE_TICKET_IT)) {
+
             //ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
             ps.setString(1,vehicleRegNumber);
             System.out.println(ps.toString());
@@ -43,20 +48,24 @@ public class DataBaseRequestService {
             dataBaseTestConfig.closeResultSet(rs);
             dataBaseTestConfig.closePreparedStatement(ps);
 
-        }catch (Exception ex){
+        } catch (Exception ex){
             ex.printStackTrace();
-        }finally {
-            dataBaseTestConfig.closeConnection(con);
         }
         return ticket;
     }
 
-    public boolean createTickets (boolean newIncoming, String vehicleRegNumber){
-        Connection con = null;
-        boolean saveDone = false;
-        try {
-            con = dataBaseTestConfig.getConnection();
-            PreparedStatement ps = con.prepareStatement(DBConstantsIT.SAVE_TICKET_IT);
+    /**
+     * Insert lines in ticket table.
+     * to simulate ancient ticket and new incoming sometime ago.
+     * @param newIncoming true to create a ticket with inTime = now - 35mn, outTime = null
+     *                    false to create a ticket with outTime not null
+     * @param vehicleRegNumber The registration number of the parked vehicle
+     *
+     */
+    public void createTickets (boolean newIncoming, String vehicleRegNumber){
+
+        try (Connection con = dataBaseTestConfig.getConnection();
+             PreparedStatement ps = con.prepareStatement(DBConstantsIT.SAVE_TICKET_IT)) {
 
             ps.setString(1, vehicleRegNumber);
             if (newIncoming) {
@@ -70,14 +79,43 @@ public class DataBaseRequestService {
                 ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()-24*60*60*1000-duration));
                 ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()-24*60*60*1000));
             }
-            saveDone =  ps.execute();
-        }catch (Exception ex){
+            ps.execute();
+        } catch (Exception ex){
             ex.printStackTrace();
-        }finally {
-            dataBaseTestConfig.closeConnection(con);
         }
-        return saveDone;
     }
 
+    /**
+     * Set AVAILABLE to false for all lines in parking to simulate that the parking is full.
+     */
+    public void fillParking(){
+        try (Connection connection = dataBaseTestConfig.getConnection();
+            //set parking entries to occupied
+             PreparedStatement ps = connection.prepareStatement(FILL_PARKING_IT)) {
+
+            ps.execute();
+
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Set AVAILABLE to false where PARKING_NUMBER=parkingNumber in parking.
+     *  to simulate that the parking number parkingNumber is occupied.
+     * @param parkingNumber parkingNumber that has to be occupied
+     */
+    public void occupyParking(int parkingNumber) {
+         try (Connection connection = dataBaseTestConfig.getConnection();
+             PreparedStatement ps = connection.prepareStatement(OCCUPY_PARKING_IT)) {
+
+            ps.setInt(1, parkingNumber);
+            //set parking "parkingNumber" to occupied
+            ps.execute();
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
 }

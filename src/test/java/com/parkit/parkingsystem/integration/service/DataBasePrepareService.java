@@ -3,8 +3,9 @@ package com.parkit.parkingsystem.integration.service;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 
-import static com.parkit.parkingsystem.integration.constants.DBConstantsIT.RESET_PARKING_IT;
+import static com.parkit.parkingsystem.integration.constants.DBConstantsIT.EMPTY_PARKING_IT;
 import static com.parkit.parkingsystem.integration.constants.DBConstantsIT.RESET_TICKET_IT;
 
 public class DataBasePrepareService {
@@ -12,20 +13,18 @@ public class DataBasePrepareService {
     DataBaseTestConfig dataBaseTestConfig = new DataBaseTestConfig();
 
     public void clearDataBaseEntries(){
-        Connection connection = null;
-        try{
-            connection = dataBaseTestConfig.getConnection();
 
-            //set parking entries to available
-            connection.prepareStatement(RESET_PARKING_IT).execute();
+        try (Connection connection = dataBaseTestConfig.getConnection();
+             //set parking entries to available
+             PreparedStatement ps1 = connection.prepareStatement(EMPTY_PARKING_IT);
+             //clear ticket entries;
+             PreparedStatement ps2 = connection.prepareStatement(RESET_TICKET_IT)) {
 
-            //clear ticket entries;
-            connection.prepareStatement(RESET_TICKET_IT).execute();
+            ps1.execute();
+            ps2.execute();
 
-        }catch(Exception e){
+        } catch (Exception e){
             e.printStackTrace();
-        }finally {
-            dataBaseTestConfig.closeConnection(connection);
         }
     }
 

@@ -14,6 +14,7 @@ import java.sql.SQLException;
 
 /**
  * Class used for retrieving data from table "parking".
+ * parking table column : PARKING_NUMBER, AVAILABLE, TYPE
  */
 public class ParkingSpotDAO {
 
@@ -34,6 +35,7 @@ public class ParkingSpotDAO {
     public ParkingSpotDAO() {
         this.dataBaseConfig = new DataBaseConfig();
     }
+
     /**
      * Sends the number of the next available slot found in the parking table
      * for the given vehicle type.
@@ -47,7 +49,7 @@ public class ParkingSpotDAO {
              PreparedStatement ps = con.prepareStatement(DBConstants.GET_NEXT_PARKING_SPOT)) {
             ps.setString(1, parkingType.toString());
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
+                if (rs.next() && rs.getRow() > 0) {
                     result = rs.getInt(1);
                 }
             }

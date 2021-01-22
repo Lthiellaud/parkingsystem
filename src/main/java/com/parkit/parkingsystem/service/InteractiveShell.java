@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Deals the user interface.
+ * Deals the user interface (controller).
  */
 public class InteractiveShell {
 
