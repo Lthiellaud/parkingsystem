@@ -97,6 +97,8 @@ public class ParkingDataBaseIT {
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         dataBaseRequestService.occupyParking(1);
         dataBaseRequestService.createTickets(true, "ABCDEF");
+        double saved_price_low = (FREE_TIME*60*60*1000+299000) / MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
+        double saved_price_high = (FREE_TIME*60*60*1000+301000) /MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
 
         //WHEN
         parkingService.processExitingVehicle();
@@ -105,8 +107,6 @@ public class ParkingDataBaseIT {
         int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
 
         //THEN
-        double saved_price_low = (FREE_TIME*60*60*1000+299000) / MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
-        double saved_price_high = (FREE_TIME*60*60*1000+301000) /MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
         assertThat(result).isEqualTo(1);
         assertThat(ticket.getPrice()).isBetween(saved_price_low, saved_price_high);
         assertThat(ticket.getOutTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),

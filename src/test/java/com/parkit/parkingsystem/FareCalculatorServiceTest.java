@@ -171,7 +171,7 @@ public class FareCalculatorServiceTest {
     public void calculatedFareForRecurringUserShouldBeDiscounted () {
         //GIVEN
         Date inTime = new Date();
-        inTime.setTime( System.currentTimeMillis() - (long) (Fare.MILLISECOND_BY_HOUR * 2) );//2 hours parking time
+        inTime.setTime(System.currentTimeMillis() - (long) (Fare.MILLISECOND_BY_HOUR * 2) );//2 hours parking time
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
 
