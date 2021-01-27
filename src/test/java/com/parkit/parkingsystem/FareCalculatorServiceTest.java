@@ -7,6 +7,7 @@ import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.FareCalculatorService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +31,7 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
+    @DisplayName("1h Calculated fare for a car = Fare.CAR_RATE_PER_HOUR")
     public void calculateFareCar(){
         //GIVEN
         Date inTime = new Date();
@@ -50,6 +52,7 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
+    @DisplayName("1h Calculated fare for a bike = Fare.BIKE_RATE_PER_HOUR")
     public void calculateFareBike(){
         Date inTime = new Date();
         inTime.setTime( System.currentTimeMillis() - (long) Fare.MILLISECOND_BY_HOUR );
@@ -68,6 +71,7 @@ public class FareCalculatorServiceTest {
 
 
     @Test
+    @DisplayName("Calculate fare with future inTime throws an exception")
     public void calculateFareBikeWithFutureInTime(){
         //GIVEN
         Date inTime = new Date();
@@ -89,6 +93,7 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
+    @DisplayName("Calculate fare with future inTime throws an exception")
     public void calculateFareBikeWithLessThanOneHourParkingTime(){
         //GIVEN
         Date inTime = new Date();

@@ -21,18 +21,18 @@ public class TicketDAO {
     private DataBaseConfig dataBaseConfig;
 
     /**
-     * Constructor of ParkingSpotDAO with database config as a parameter.
-     * @param dataBaseConfig input parameter
-     */
-    public TicketDAO(final DataBaseConfig dataBaseConfig) {
-        this.dataBaseConfig = dataBaseConfig;
-    }
-
-    /**
      * Constructor of ParkingSpotDAO without parameter.
      */
     public TicketDAO() {
         this.dataBaseConfig = new DataBaseConfig();
+    }
+
+    /**
+     * Setter of ParkingSpotDAO to associate a new database config.
+     * @param dataBaseConfig input parameter
+     */
+    public void setDataBaseConfig(DataBaseConfig dataBaseConfig) {
+        this.dataBaseConfig = dataBaseConfig;
     }
 
     /**
@@ -41,7 +41,6 @@ public class TicketDAO {
      *
      */
     public void saveTicket(Ticket ticket) {
-        //boolean saveDone = false;
         try (Connection con = dataBaseConfig.getConnection();
              PreparedStatement ps = con.prepareStatement(DBConstants.SAVE_TICKET)) {
             ps.setInt(1, ticket.getParkingSpot().getId());
@@ -50,13 +49,11 @@ public class TicketDAO {
             ps.setTimestamp(4, new Timestamp(ticket.getInTime().getTime()));
             ps.setTimestamp(5, (ticket.getOutTime() == null)
                     ? null : (new Timestamp(ticket.getOutTime().getTime())));
-            //saveDone =
+            ps.setBoolean(6, ticket.getDiscount());
             ps.execute();
-
         } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error saving ticket", ex);
         }
-        //return saveDone;
     }
 
     /**
@@ -75,18 +72,20 @@ public class TicketDAO {
                     ticket = new Ticket();
                     ParkingSpot parkingSpot =
                             new ParkingSpot(rs.getInt(1),
-                                    ParkingType.valueOf(rs.getString(6)), false);
+                                    ParkingType.valueOf(rs.getString(7)), false);
                     ticket.setParkingSpot(parkingSpot);
                     ticket.setId(rs.getInt(2));
                     ticket.setVehicleRegNumber(vehicleRegNumber);
                     ticket.setPrice(rs.getDouble(3));
                     ticket.setInTime(rs.getTimestamp(4));
                     ticket.setOutTime(rs.getTimestamp(5));
+                    ticket.setDiscount(rs.getBoolean(6));
                 }
             }
         } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error updating saved ticket with discount", ex);
         }
+
         return ticket;
     }
 
@@ -103,7 +102,7 @@ public class TicketDAO {
             //COUNT(*)
             ps.setString(1, ticket.getVehicleRegNumber());
             try (ResultSet rs = ps.executeQuery()) {
-                recurrent = (rs.next() && rs.getInt(1) > 1);
+                recurrent = (rs.next() && rs.getInt(1) > 0);
             }
         } catch (ClassNotFoundException | SQLException ex) {
             LOGGER.error("Error while retrieving discount information", ex);

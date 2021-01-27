@@ -29,27 +29,35 @@ import static org.mockito.Mockito.when;
 public class ParkingDataBaseIT {
 
     private static DataBaseTestConfig dataBaseTestConfig = new DataBaseTestConfig();
-    private static ParkingSpotDAO parkingSpotDAO;
-    private static TicketDAO ticketDAO;
+    private static ParkingSpotDAO parkingSpotDAO = new ParkingSpotDAO();
+    private static TicketDAO ticketDAO = new TicketDAO();
     private static DataBasePrepareService dataBasePrepareService;
     private static DataBaseRequestService dataBaseRequestService;
     private static Date refDate;
+    private static ParkingService parkingService;
+    private static double saved_price_low;
+    private static double saved_price_high;
 
     @Mock
     private static InputReaderUtil inputReaderUtil;
 
     @BeforeAll
     private static void setUp() {
-        parkingSpotDAO = new ParkingSpotDAO(dataBaseTestConfig);
-        ticketDAO = new TicketDAO(dataBaseTestConfig);
+        parkingSpotDAO.setDataBaseConfig(dataBaseTestConfig);
+        ticketDAO.setDataBaseConfig(dataBaseTestConfig);
         dataBasePrepareService = new DataBasePrepareService();
         dataBaseRequestService = new DataBaseRequestService();
+        //in time and out time are stored with a precision of +/- 1s, the calculated price can't be known exactly
+        saved_price_low = (FREE_TIME*60*60*1000+299000) / MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
+        saved_price_high = (FREE_TIME*60*60*1000+301000) /MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
     }
 
     @BeforeEach
     private void setUpPerTest() {
         dataBasePrepareService.clearDataBaseEntries();
         refDate = new Date (System.currentTimeMillis() - 1000);
+        parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+
     }
 
     @Test
@@ -57,7 +65,6 @@ public class ParkingDataBaseIT {
         //GIVEN
         when(inputReaderUtil.readSelection()).thenReturn(1);
         when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
 
         //WHEN
         parkingService.processIncomingVehicle();
@@ -71,14 +78,13 @@ public class ParkingDataBaseIT {
         assertThat(ticket.getInTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
                 true, true);
         assertThat(ticket.getOutTime()).isNull();
-        assertThat(ticketDAO.checkRecurringUser(ticket)).isFalse();
+        assertThat(ticket.getDiscount()).isFalse();
     }
 
     @Test
     public void testTryParkingACar_ParkingFull() {
         //GIVEN
         when(inputReaderUtil.readSelection()).thenReturn(1);
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         dataBaseRequestService.fillParking();
 
         //WHEN
@@ -92,21 +98,18 @@ public class ParkingDataBaseIT {
     @Test
     public void testParkingLotExit() {
 
-        //GIVEN
+        //GIVEN - the car ABCDEF is parked in spot 1 since 35mn
         when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         dataBaseRequestService.occupyParking(1);
-        dataBaseRequestService.createTickets(true, "ABCDEF");
-        double saved_price_low = (FREE_TIME*60*60*1000+299000) / MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
-        double saved_price_high = (FREE_TIME*60*60*1000+301000) /MILLISECOND_BY_HOUR * Fare.CAR_RATE_PER_HOUR;
+        dataBaseRequestService.createTickets(true, "ABCDEF", false);
 
-        //WHEN
+        //WHEN - the car exits
         parkingService.processExitingVehicle();
         Ticket ticket = dataBaseRequestService.getExitedVehicleTicket("ABCDEF");
-        ticket.setDiscount(ticketDAO.checkRecurringUser(ticket));
         int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
 
-        //THEN
+        //THEN - in the database, the spot 1 is available, the price is between low and high
+        // calculated price, ouTime is more or less equal now
         assertThat(result).isEqualTo(1);
         assertThat(ticket.getPrice()).isBetween(saved_price_low, saved_price_high);
         assertThat(ticket.getOutTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
@@ -119,18 +122,18 @@ public class ParkingDataBaseIT {
 
         //GIVEN
         when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
-        ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         dataBaseRequestService.occupyParking(1);
-        dataBaseRequestService.createTickets(false, "ABCDEF");
-        dataBaseRequestService.createTickets(true, "ABCDEF");
+        dataBaseRequestService.createTickets(false, "ABCDEF", false);
+        dataBaseRequestService.createTickets(true, "ABCDEF", true);
 
         //WHEN
         parkingService.processExitingVehicle();
         Ticket ticket = dataBaseRequestService.getExitedVehicleTicket("ABCDEF");
-        ticket.setDiscount(ticketDAO.checkRecurringUser(ticket));
 
         //THEN
         assertThat(ticket.getDiscount()).isTrue();
+        assertThat(ticket.getPrice()).isBetween(saved_price_low*(1-REGULAR_USER_DISCOUNT_RATE),
+                                                saved_price_high*(1-REGULAR_USER_DISCOUNT_RATE));
     }
 
     @Test
@@ -157,6 +160,7 @@ public class ParkingDataBaseIT {
         ticket.setParkingSpot(parkingSpot);
         ticket.setVehicleRegNumber("ABCDEF");
         ticket.setId(1);
+        ticket.setDiscount(false);
 
         //WHEN
         boolean response = ticketDAO.updateTicket(ticket);
