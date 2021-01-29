@@ -1,5 +1,6 @@
 package com.parkit.parkingsystem;
 
+import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.dao.ParkingSpotDAO;
 import com.parkit.parkingsystem.dao.TicketDAO;
@@ -27,7 +28,7 @@ import static org.mockito.Mockito.*;
 public class ParkingServiceTest {
 
     private static ParkingService parkingService;
-    private static Date inTime = new Date(System.currentTimeMillis() - (60*60*1000));
+    private static Date inTime = new Date(System.currentTimeMillis() - Fare.MILLISECOND_BY_HOUR);
     private static Ticket ticket;
     private static ParkingSpot parkingSpot;
     private static Date refDate;
@@ -68,7 +69,7 @@ public class ParkingServiceTest {
     }
 
     @Test
-    @DisplayName("Process exiting vehicle - simulate update table ticket OK")
+    @DisplayName("Process exiting vehicle OK")
     public void processExitingVehicle_updateOk_Test(){
         //GIVEN
         when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
@@ -90,6 +91,32 @@ public class ParkingServiceTest {
     }
 
     @Test
+    @DisplayName("Process exiting vehicle OK ")
+    public void processExitingVehicleWith0ToPay(){
+        //GIVEN
+        ticket.setInTime(new Date(System.currentTimeMillis() - (long) 0.25*Fare.MILLISECOND_BY_HOUR));
+        when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+        when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
+        when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
+
+        //WHEN
+        parkingService.processExitingVehicle();
+
+        //THEN
+        assertThat(parkingSpot.isAvailable()).isTrue();
+        assertThat(ticket.getPrice()).isEqualTo(0);
+        assertThat(ticket.getOutTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
+                true,true);
+        verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
+        verify(ticketDAO, Mockito.times(1)).updateTicket(any(Ticket.class));
+        verify(ticketDAO, Mockito.times(1)).getTicket(anyString());
+        verify(inputReaderUtil, Mockito.times(1)).readVehicleRegistrationNumber();
+        assertThat(outputStreamCaptor.toString()).containsOnlyOnce("Recorded out-time " +
+                "for vehicle number");
+        assertThat(outputStreamCaptor.toString()).containsOnlyOnce("Nothing to pay !");
+    }
+
+    @Test
     @DisplayName("Process exiting vehicle - simulate update table ticket KO")
     public void processExitingVehicle_updateKO_Test(){
         //GIVEN
@@ -102,7 +129,8 @@ public class ParkingServiceTest {
         verify(ticketDAO, Mockito.times(1)).updateTicket(any(Ticket.class));
         verify(ticketDAO, Mockito.times(1)).getTicket(anyString());
         assertThat(parkingSpot.isAvailable()).isFalse();
-        assertThat(outputStreamCaptor.toString()).containsOnlyOnce("Unable to update ticket information. Error occurred");
+        assertThat(outputStreamCaptor.toString()).containsOnlyOnce("Unable to update ticket "
+                + "information. Error occurred");
     }
 
     @Test
@@ -115,7 +143,8 @@ public class ParkingServiceTest {
         parkingService.processExitingVehicle();
 
         //THEN
-        assertThat(outputStreamCaptor.toString()).containsOnlyOnce("Unable to get your ticket. Please check your registration number");
+        assertThat(outputStreamCaptor.toString()).containsOnlyOnce("Unable to get your ticket." +
+                " Please check your registration number");
         verify(ticketDAO, Mockito.times(1)).getTicket(anyString());
     }
 

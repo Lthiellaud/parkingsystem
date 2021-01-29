@@ -70,12 +70,12 @@ public class DataBaseRequestService {
             ps.setBoolean(4, discount);
             if (newIncoming) {
                 //Entrance 35mn ago (free time + 5mn)
-                int duration = (int) (FREE_TIME*60*60*1000+300000) ;
+                long duration = (long) (FREE_TIME*60*60*1000+300000) ;
                 ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()-duration));
                 ps.setTimestamp(3, null);
             } else {
                 //one day old ticket / duration 25mn (free time - 5mn)
-                int duration = (int) (FREE_TIME*60*60*1000-300000) ;
+                long duration = (long) (FREE_TIME*60*60*1000-300000) ;
                 ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()-24*60*60*1000-duration));
                 ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()-24*60*60*1000));
             }

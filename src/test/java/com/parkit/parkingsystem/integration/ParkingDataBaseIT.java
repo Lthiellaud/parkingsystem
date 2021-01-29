@@ -14,7 +14,6 @@ import com.parkit.parkingsystem.util.InputReaderUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -68,6 +67,28 @@ public class ParkingDataBaseIT {
 
         //WHEN
         parkingService.processIncomingVehicle();
+        Ticket ticket = ticketDAO.getTicket("ABCDEF");
+        int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
+
+        //THEN
+        assertThat(ticket).isNotNull();
+        assertThat(result).isEqualTo(2);
+        assertThat(ticket.getPrice()).isEqualTo(0.0);
+        assertThat(ticket.getInTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
+                true, true);
+        assertThat(ticket.getOutTime()).isNull();
+        assertThat(ticket.getDiscount()).isFalse();
+    }
+
+    @Test
+    public void testParkingACarOfARecurringUser() {
+        //GIVEN
+        when(inputReaderUtil.readSelection()).thenReturn(1);
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+        dataBaseRequestService.createTickets(false, "ABCDEF", false);
+
+        //WHEN
+        parkingService.processIncomingVehicle();
 
         //THEN
         Ticket ticket = ticketDAO.getTicket("ABCDEF");
@@ -78,7 +99,7 @@ public class ParkingDataBaseIT {
         assertThat(ticket.getInTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
                 true, true);
         assertThat(ticket.getOutTime()).isNull();
-        assertThat(ticket.getDiscount()).isFalse();
+        assertThat(ticket.getDiscount()).isTrue();
     }
 
     @Test
@@ -120,7 +141,7 @@ public class ParkingDataBaseIT {
     @Test
     public void testParkingLotExitOfRecurringUser() {
 
-        //GIVEN
+        //GIVEN - A car which has used the parking yesterday has come in today 35mn ago
         when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
         dataBaseRequestService.occupyParking(1);
         dataBaseRequestService.createTickets(false, "ABCDEF", false);
@@ -130,8 +151,9 @@ public class ParkingDataBaseIT {
         parkingService.processExitingVehicle();
         Ticket ticket = dataBaseRequestService.getExitedVehicleTicket("ABCDEF");
 
-        //THEN
+        //THEN - The ticket update is the today ticket and the saved price is discounted
         assertThat(ticket.getDiscount()).isTrue();
+        assertThat(ticket.getInTime()).isAfter(new Date(refDate.getTime()-MILLISECOND_BY_HOUR));
         assertThat(ticket.getPrice()).isBetween(saved_price_low*(1-REGULAR_USER_DISCOUNT_RATE),
                                                 saved_price_high*(1-REGULAR_USER_DISCOUNT_RATE));
     }

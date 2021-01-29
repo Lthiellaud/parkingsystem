@@ -158,7 +158,7 @@ public class ParkingService {
                     parkingSpotDAO.updateParking(parkingSpot);
                     if (ticket.getPrice() == 0) {
                         System.out.println("You've been parked less than "
-                                + (int) (FREE_TIME * 60) + "mn. Nothing to pay");
+                                + (int) (FREE_TIME * 60) + "mn. Nothing to pay !");
                     } else {
                         System.out.println("Please pay the parking fare:"
                                 + ticket.getPrice());

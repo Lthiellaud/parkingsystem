@@ -35,7 +35,7 @@ public class FareCalculatorServiceTest {
     public void calculateFareCar(){
         //GIVEN
         Date inTime = new Date();
-        inTime.setTime( System.currentTimeMillis() - (long) Fare.MILLISECOND_BY_HOUR );
+        inTime.setTime( System.currentTimeMillis() - Fare.MILLISECOND_BY_HOUR );
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
 
@@ -55,7 +55,7 @@ public class FareCalculatorServiceTest {
     @DisplayName("1h Calculated fare for a bike = Fare.BIKE_RATE_PER_HOUR")
     public void calculateFareBike(){
         Date inTime = new Date();
-        inTime.setTime( System.currentTimeMillis() - (long) Fare.MILLISECOND_BY_HOUR );
+        inTime.setTime( System.currentTimeMillis() - Fare.MILLISECOND_BY_HOUR );
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.BIKE,false);
 
@@ -75,7 +75,7 @@ public class FareCalculatorServiceTest {
     public void calculateFareBikeWithFutureInTime(){
         //GIVEN
         Date inTime = new Date();
-        inTime.setTime( System.currentTimeMillis() + (long) Fare.MILLISECOND_BY_HOUR );
+        inTime.setTime( System.currentTimeMillis() + Fare.MILLISECOND_BY_HOUR );
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.BIKE,false);
 
@@ -93,7 +93,28 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
-    @DisplayName("Calculate fare with future inTime throws an exception")
+    @DisplayName("Calculate fare with null out time throws an exception")
+    public void calculateFareBikeWithNullOutTime(){
+        //GIVEN
+        Date inTime = new Date();
+        inTime.setTime( System.currentTimeMillis() - Fare.MILLISECOND_BY_HOUR );
+        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.BIKE,false);
+
+        ticket.setInTime(inTime);
+        ticket.setOutTime(null);
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setDiscount(false);
+
+        //WHEN
+        Exception exception = assertThrows(IllegalArgumentException.class, ()
+                -> fareCalculatorService.calculateFare(ticket));
+
+        //THEN
+        assertThat(exception.getMessage()).contains("Out time provided is null");
+    }
+
+    @Test
+    @DisplayName("Calculate 45 mn fare for a car should be 0.75*car fare rate")
     public void calculateFareBikeWithLessThanOneHourParkingTime(){
         //GIVEN
         Date inTime = new Date();
@@ -114,6 +135,7 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
+    @DisplayName("Calculate 45 mn fare for a bike should be 0.75*bike fare rate")
     public void calculateFareCarWithLessThanOneHourParkingTime(){
         //GIVEN
         Date inTime = new Date();
@@ -134,10 +156,11 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
+    @DisplayName("Calculate 1 day fare for a car should be 24*car fare rate")
     public void calculateFareCarWithMoreThanADayParkingTime(){
         //GIVEN
         Date inTime = new Date();
-        inTime.setTime( System.currentTimeMillis() - (long) (Fare.MILLISECOND_BY_HOUR * 24));//24 hours parking time should give 24 * parking fare per hour
+        inTime.setTime( System.currentTimeMillis() - (Fare.MILLISECOND_BY_HOUR * 24));//24 hours parking time should give 24 * parking fare per hour
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
 
@@ -154,6 +177,7 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
+    @DisplayName("Calculate 15 mn fare for a car should be 0")
     public void calculatedFareForLessThan30MinuteShouldBe0(){
         //GIVEN
         Date inTime = new Date();
@@ -173,10 +197,11 @@ public class FareCalculatorServiceTest {
     }
 
     @Test
+    @DisplayName("Calculate 2h fare for a recurring car should be 2*0.95*car fare rate")
     public void calculatedFareForRecurringUserShouldBeDiscounted () {
         //GIVEN
         Date inTime = new Date();
-        inTime.setTime(System.currentTimeMillis() - (long) (Fare.MILLISECOND_BY_HOUR * 2) );//2 hours parking time
+        inTime.setTime(System.currentTimeMillis() - (Fare.MILLISECOND_BY_HOUR * 2) );//2 hours parking time
         Date outTime = new Date();
         ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
 
