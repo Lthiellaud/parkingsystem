@@ -62,7 +62,7 @@ public class ParkingService {
                 ticket.setPrice(0);
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
-                ticket.setDiscount(ticketDAO.checkRecurringUser(ticket));
+                ticket.setDiscount(ticketDAO.checkRecurringUser(vehicleRegNumber));
                 ticketDAO.saveTicket(ticket);
                 System.out.println("Generated Ticket and saved in DB");
                 if (ticket.getDiscount()) {

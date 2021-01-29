@@ -74,8 +74,7 @@ public class ParkingDataBaseIT {
         assertThat(ticket).isNotNull();
         assertThat(result).isEqualTo(2);
         assertThat(ticket.getPrice()).isEqualTo(0.0);
-        assertThat(ticket.getInTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
-                true, true);
+        assertThat(ticket.getInTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000));
         assertThat(ticket.getOutTime()).isNull();
         assertThat(ticket.getDiscount()).isFalse();
     }
@@ -89,16 +88,9 @@ public class ParkingDataBaseIT {
 
         //WHEN
         parkingService.processIncomingVehicle();
+        Ticket ticket = ticketDAO.getTicket("ABCDEF");
 
         //THEN
-        Ticket ticket = ticketDAO.getTicket("ABCDEF");
-        int result = parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR);
-        assertThat(ticket).isNotNull();
-        assertThat(result).isEqualTo(2);
-        assertThat(ticket.getPrice()).isEqualTo(0.0);
-        assertThat(ticket.getInTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
-                true, true);
-        assertThat(ticket.getOutTime()).isNull();
         assertThat(ticket.getDiscount()).isTrue();
     }
 
@@ -133,9 +125,7 @@ public class ParkingDataBaseIT {
         // calculated price, ouTime is more or less equal now
         assertThat(result).isEqualTo(1);
         assertThat(ticket.getPrice()).isBetween(saved_price_low, saved_price_high);
-        assertThat(ticket.getOutTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000),
-                true,true);
-        assertThat(ticket.getInTime()).isBefore(ticket.getOutTime());
+        assertThat(ticket.getOutTime()).isBetween(refDate, new Date(System.currentTimeMillis()+1000));
     }
 
     @Test

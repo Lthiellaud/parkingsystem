@@ -153,7 +153,7 @@ public class ParkingServiceTest {
     public void processIncomingVehicle_withDiscount_Test(){
         //GIVEN
         when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
-        when(ticketDAO.checkRecurringUser(any(Ticket.class))).thenReturn(true);
+        when(ticketDAO.checkRecurringUser("ABCDEF")).thenReturn(true);
         when(parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR)).thenReturn(1);
 
         //WHEN
@@ -161,7 +161,7 @@ public class ParkingServiceTest {
 
         //THEN
         verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
-        verify(ticketDAO, Mockito.times(1)).checkRecurringUser(any(Ticket.class));
+        verify(ticketDAO, Mockito.times(1)).checkRecurringUser("ABCDEF");
         verify(ticketDAO, Mockito.times(1)).saveTicket(any(Ticket.class));
         assertThat(outputStreamCaptor.toString()).containsOnlyOnce("recurring");
         assertThat(outputStreamCaptor.toString()).contains("Please park your vehicle in spot number: 1");
@@ -171,7 +171,7 @@ public class ParkingServiceTest {
     @DisplayName("Process incoming vehicle without discount")
     public void processIncomingVehicle_withoutDiscount_Test(){
         //GIVEN
-        when(ticketDAO.checkRecurringUser(any(Ticket.class))).thenReturn(false);
+        when(ticketDAO.checkRecurringUser("ABCDEF")).thenReturn(false);
         when(parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR)).thenReturn(1);
         when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(false);
 
@@ -180,7 +180,7 @@ public class ParkingServiceTest {
 
         //THEN
         verify(parkingSpotDAO, Mockito.times(1)).updateParking(any(ParkingSpot.class));
-        verify(ticketDAO, Mockito.times(1)).checkRecurringUser(any(Ticket.class));
+        verify(ticketDAO, Mockito.times(1)).checkRecurringUser("ABCDEF");
         verify(ticketDAO, Mockito.times(1)).saveTicket(any(Ticket.class));
         verify(inputReaderUtil, Mockito.times(1)).readVehicleRegistrationNumber();
         assertThat(outputStreamCaptor.toString()).doesNotContain("recurring");
@@ -200,7 +200,7 @@ public class ParkingServiceTest {
 
         //THEN
         verify(parkingSpotDAO, Mockito.times(0)).updateParking(any(ParkingSpot.class));
-        verify(ticketDAO, Mockito.times(0)).checkRecurringUser(any(Ticket.class));
+        verify(ticketDAO, Mockito.times(0)).checkRecurringUser("ABCDEF");
         verify(inputReaderUtil, Mockito.times(0)).readVehicleRegistrationNumber();
         verify(inputReaderUtil, Mockito.times(1)).readSelection();
         assertThat(outputStreamCaptor.toString()).doesNotContain("Generated Ticket and saved in DB");
@@ -219,7 +219,7 @@ public class ParkingServiceTest {
 
         //THEN
         verify(parkingSpotDAO, Mockito.times(0)).updateParking(any(ParkingSpot.class));
-        verify(ticketDAO, Mockito.times(0)).checkRecurringUser(any(Ticket.class));
+        verify(ticketDAO, Mockito.times(0)).checkRecurringUser("ABCDEF");
         assertThat(outputStreamCaptor.toString()).doesNotContain("Generated Ticket and saved in DB");
         assertThat(outputStreamCaptor.toString()).contains("That's not a correct input");
     }

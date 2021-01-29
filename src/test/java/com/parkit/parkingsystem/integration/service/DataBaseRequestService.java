@@ -1,5 +1,6 @@
 package com.parkit.parkingsystem.integration.service;
 
+import com.parkit.parkingsystem.constants.DBConstants;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
 import com.parkit.parkingsystem.integration.constants.DBConstantsIT;
@@ -64,20 +65,22 @@ public class DataBaseRequestService {
     public void createTickets (boolean newIncoming, String vehicleRegNumber, boolean discount){
 
         try (Connection con = dataBaseTestConfig.getConnection();
-             PreparedStatement ps = con.prepareStatement(DBConstantsIT.SAVE_TICKET_IT)) {
-
-            ps.setString(1, vehicleRegNumber);
-            ps.setBoolean(4, discount);
+             PreparedStatement ps = con.prepareStatement(DBConstants.SAVE_TICKET)) {
+            //PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME, DISCOUNT
+            ps.setInt(1,1);
+            ps.setString(2, vehicleRegNumber);
+            ps.setDouble(3, 0.0);
+            ps.setBoolean(6, discount);
             if (newIncoming) {
                 //Entrance 35mn ago (free time + 5mn)
                 long duration = (long) (FREE_TIME*60*60*1000+300000) ;
-                ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()-duration));
-                ps.setTimestamp(3, null);
+                ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()-duration));
+                ps.setTimestamp(5, null);
             } else {
                 //one day old ticket / duration 25mn (free time - 5mn)
                 long duration = (long) (FREE_TIME*60*60*1000-300000) ;
-                ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()-24*60*60*1000-duration));
-                ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()-24*60*60*1000));
+                ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()-24*60*60*1000-duration));
+                ps.setTimestamp(5, new Timestamp(System.currentTimeMillis()-24*60*60*1000));
             }
             ps.execute();
         } catch (Exception ex){

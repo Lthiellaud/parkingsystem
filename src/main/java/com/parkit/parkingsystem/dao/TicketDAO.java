@@ -91,16 +91,16 @@ public class TicketDAO {
 
     /**
      * Checks in the "ticket" table if the user is a recurring one.
-     * @param ticket The ticket which need to be check
+     * @param vehicleRegNumber The vehicle registration number which need to be check
      * @return True if the user benefits from a 5% discount for recurring
      *  false if not
      */
-    public boolean checkRecurringUser(Ticket ticket) {
+    public boolean checkRecurringUser(String vehicleRegNumber) {
         boolean recurrent = false;
         try (Connection con = dataBaseConfig.getConnection();
              PreparedStatement ps = con.prepareStatement(DBConstants.CHECK_RECURRING_USER)) {
             //COUNT(*)
-            ps.setString(1, ticket.getVehicleRegNumber());
+            ps.setString(1, vehicleRegNumber);
             try (ResultSet rs = ps.executeQuery()) {
                 recurrent = (rs.next() && rs.getInt(1) > 0);
             }
