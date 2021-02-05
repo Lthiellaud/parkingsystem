@@ -1,5 +1,6 @@
 package com.parkit.parkingsystem.integration.service;
 
+import com.parkit.parkingsystem.constants.DBConstants;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
 import com.parkit.parkingsystem.integration.constants.DBConstantsIT;
@@ -21,7 +22,7 @@ public class DataBaseRequestService {
 
     /**
      * Idem ticketDAO.getTicket() except for the "where" condition.
-     * The exit is done => outTime is not null
+     * The exit is done : outTime is not null
      * @param vehicleRegNumber registration number of the vehicle that has just exited.
      * @return the registered ticket
      */
@@ -31,22 +32,20 @@ public class DataBaseRequestService {
         try (Connection con = dataBaseTestConfig.getConnection();
              PreparedStatement ps = con.prepareStatement(DBConstantsIT.GET_EXITED_VEHICLE_TICKET_IT)) {
 
-            //ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
+            //PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME, DISCOUNT, TYPE)
             ps.setString(1,vehicleRegNumber);
-            System.out.println(ps.toString());
             ResultSet rs = ps.executeQuery();
             if(rs.next()){
                 ticket = new Ticket();
-                ParkingSpot parkingSpot = new ParkingSpot(rs.getInt(1), ParkingType.valueOf(rs.getString(6)),false);
+                ParkingSpot parkingSpot = new ParkingSpot(rs.getInt(1), ParkingType.valueOf(rs.getString(7)),false);
                 ticket.setParkingSpot(parkingSpot);
                 ticket.setId(rs.getInt(2));
                 ticket.setVehicleRegNumber(vehicleRegNumber);
                 ticket.setPrice(rs.getDouble(3));
                 ticket.setInTime(rs.getTimestamp(4));
                 ticket.setOutTime(rs.getTimestamp(5));
+                ticket.setDiscount(rs.getBoolean(6));
             }
-            dataBaseTestConfig.closeResultSet(rs);
-            dataBaseTestConfig.closePreparedStatement(ps);
 
         } catch (Exception ex){
             ex.printStackTrace();
@@ -60,24 +59,28 @@ public class DataBaseRequestService {
      * @param newIncoming true to create a ticket with inTime = now - 35mn, outTime = null
      *                    false to create a ticket with outTime not null
      * @param vehicleRegNumber The registration number of the parked vehicle
+     * @param discount true if the user is a recurring one
      *
      */
-    public void createTickets (boolean newIncoming, String vehicleRegNumber){
+    public void createTickets (boolean newIncoming, String vehicleRegNumber, boolean discount){
 
         try (Connection con = dataBaseTestConfig.getConnection();
-             PreparedStatement ps = con.prepareStatement(DBConstantsIT.SAVE_TICKET_IT)) {
-
-            ps.setString(1, vehicleRegNumber);
+             PreparedStatement ps = con.prepareStatement(DBConstants.SAVE_TICKET)) {
+            //PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME, DISCOUNT
+            ps.setInt(1,1);
+            ps.setString(2, vehicleRegNumber);
+            ps.setDouble(3, 0.0);
+            ps.setBoolean(6, discount);
             if (newIncoming) {
                 //Entrance 35mn ago (free time + 5mn)
-                int duration = (int) (FREE_TIME*60*60*1000+300000) ;
-                ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()-duration));
-                ps.setTimestamp(3, null);
+                long duration = (long) (FREE_TIME*60*60*1000+300000) ;
+                ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()-duration));
+                ps.setTimestamp(5, null);
             } else {
                 //one day old ticket / duration 25mn (free time - 5mn)
-                int duration = (int) (FREE_TIME*60*60*1000-300000) ;
-                ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()-24*60*60*1000-duration));
-                ps.setTimestamp(3, new Timestamp(System.currentTimeMillis()-24*60*60*1000));
+                long duration = (long) (FREE_TIME*60*60*1000-300000) ;
+                ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()-24*60*60*1000-duration));
+                ps.setTimestamp(5, new Timestamp(System.currentTimeMillis()-24*60*60*1000));
             }
             ps.execute();
         } catch (Exception ex){

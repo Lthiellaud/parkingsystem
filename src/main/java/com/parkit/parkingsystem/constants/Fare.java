@@ -8,6 +8,6 @@ public class Fare {
     public static final double CAR_RATE_PER_HOUR = 1.50;
     public static final double FREE_TIME = 0.50;
     public static final double REGULAR_USER_DISCOUNT_RATE = 0.05;
-    public static final double MILLISECOND_BY_HOUR = 60 * 60 * 1000.0;
+    public static final long MILLISECOND_BY_HOUR = 60 * 60 * 1000;
 
 }

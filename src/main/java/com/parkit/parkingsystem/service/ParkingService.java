@@ -62,9 +62,9 @@ public class ParkingService {
                 ticket.setPrice(0);
                 ticket.setInTime(inTime);
                 ticket.setOutTime(null);
+                ticket.setDiscount(ticketDAO.checkRecurringUser(vehicleRegNumber));
                 ticketDAO.saveTicket(ticket);
                 System.out.println("Generated Ticket and saved in DB");
-                ticket.setDiscount(ticketDAO.checkRecurringUser(ticket));
                 if (ticket.getDiscount()) {
                     System.out.println("Welcome back! "
                             + "As a recurring user of our parking lot, "
@@ -149,7 +149,6 @@ public class ParkingService {
             String vehicleRegNumber = getVehicleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
             if (ticket != null) {
-                ticket.setDiscount(ticketDAO.checkRecurringUser(ticket));
                 Date outTime = new Date();
                 ticket.setOutTime(outTime);
                 fareCalculatorService.calculateFare(ticket);
@@ -159,7 +158,7 @@ public class ParkingService {
                     parkingSpotDAO.updateParking(parkingSpot);
                     if (ticket.getPrice() == 0) {
                         System.out.println("You've been parked less than "
-                                + (int) (FREE_TIME * 60) + "mn. Nothing to pay");
+                                + (int) (FREE_TIME * 60) + "mn. Nothing to pay !");
                     } else {
                         System.out.println("Please pay the parking fare:"
                                 + ticket.getPrice());

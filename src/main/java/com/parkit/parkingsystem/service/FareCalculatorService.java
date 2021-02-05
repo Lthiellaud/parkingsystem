@@ -29,6 +29,7 @@ public class FareCalculatorService {
         double inLongTime = inTime.getTime();
         double outLongTime = outTime.getTime();
 
+        //duration calculated in decimal hour
         double duration = (outLongTime - inLongTime) / MILLISECOND_BY_HOUR;
 
         //implement Free 30-min parking

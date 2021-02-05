@@ -103,33 +103,10 @@
                 <version>${dep.jacoco.version}</version>
                 <executions>
                     <execution>
-                        <id>prepare-agent-it</id>
-                        <goals>
-                            <goal>prepare-agent-integration</goal>
-                        </goals>
-                        <configuration>
-                            <destFile>${project.build.directory}/coverage/jacoco-it.exec</destFile>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>prepare-agent-test</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
-                        <configuration>
-                            <destFile>${project.build.directory}/coverage/jacoco-ut.exec</destFile>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>integration-test-report</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                        <configuration>
-                            <dataFile>${project.build.directory}/coverage/jacoco-it.exec</dataFile>
-                            <outputDirectory>${project.reporting.outputDirectory}/jacoco-it</outputDirectory>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>test-report</id>
@@ -137,37 +114,46 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
-                        <configuration>
-                            <dataFile>${project.build.directory}/coverage/jacoco-ut.exec</dataFile>
-                            <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>prepare-agent-it</id>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>integration-test-report</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
                     </execution>
                     <execution>
                         <id>merge-results</id>
-                        <phase>verify</phase>
+                        <phase>post-integration-test</phase>
                         <goals>
                             <goal>merge</goal>
                         </goals>
                         <configuration>
                             <fileSets>
                                 <fileSet>
-                                    <directory>${project.build.directory}/coverage</directory>
+                                    <directory>${project.build.directory}</directory>
                                     <includes>
                                         <include>*.exec</include>
                                     </includes>
                                 </fileSet>
                             </fileSets>
-                            <destFile>${project.build.directory}/coverage/aggregate.exec</destFile>
+                            <destFile>${project.build.directory}/aggregate.exec</destFile>
                         </configuration>
                     </execution>
                     <execution>
                         <id>post-merge-report</id>
-                        <phase>verify</phase>
+                        <phase>post-integration-test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                         <configuration>
-                            <dataFile>${project.build.directory}/coverage/aggregate.exec</dataFile>
+                            <dataFile>${project.build.directory}/aggregate.exec</dataFile>
                             <outputDirectory>${project.reporting.outputDirectory}/jacoco-aggregate</outputDirectory>
                         </configuration>
                     </execution>
@@ -205,19 +191,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.22.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.9.1</version>
             </plugin>
@@ -231,7 +204,6 @@
                 <version>3.1.1</version>
                 <configuration>
                     <configLocation>${project.basedir}/src/main/resources/checkstyle.xml</configLocation>
-                    <outputFile>${project.reporting.outputDirectory}/checkstyle-result.xml</outputFile>
                 </configuration>
             </plugin>
             <plugin>
@@ -252,6 +224,19 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
                 <version>2.22.2</version>
+           </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report>
+                            <report>report-integration</report>
+                            <report>report-aggregate</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
             </plugin>
         </plugins>
     </reporting>

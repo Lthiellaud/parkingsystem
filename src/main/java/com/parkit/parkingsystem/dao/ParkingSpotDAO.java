@@ -22,18 +22,18 @@ public class ParkingSpotDAO {
     private DataBaseConfig dataBaseConfig;
 
     /**
-     * Constructor of ParkingSpotDAO with database config as a parameter.
-     * @param dataBaseConfig input parameter
-     */
-    public ParkingSpotDAO(final DataBaseConfig dataBaseConfig) {
-        this.dataBaseConfig = dataBaseConfig;
-    }
-
-    /**
      * Constructor of ParkingSpotDAO without parameter.
      */
     public ParkingSpotDAO() {
         this.dataBaseConfig = new DataBaseConfig();
+    }
+
+    /**
+     * Setter of ParkingSpotDAO to associate a new database config.
+     * @param dataBaseConfig input parameter
+     */
+    public void setDataBaseConfig(DataBaseConfig dataBaseConfig) {
+        this.dataBaseConfig = dataBaseConfig;
     }
 
     /**
